@@ -14,36 +14,54 @@
 - Em "ID da VPC", selecione a VPC criada anteriormente;
 - Configure quatro sub-redes com as seguintes configurações:
 
-Nome:  | SUB-privada01  | SUB-publica01  | SUB-privada02  | SUB-publica02
-------------- | ------------- | ------------- | ------------- | -------------
-Zona de disponibilidade:  |  `us-east-1a`  |  `us-east-1a`  |  `us-east-1b`  |  `us-east-1b` 
-Bloco CIDR IPv4:  | `172.28.0.0/24`  | `172.28.1.0/24`  | `172.28.3.0/24`  | `172.28.2.0/24`
-- Após criar todas as sub-redes, selecionar uma sub-redes pública e clicar em "ações", depois em "Editar configurações de sub-rede", selecionar a caixa "Habilitar endereço IPv4 público de atribuição automática" e salvar;
-- Realizar os mesmos passos anteriores para a outra sub-rede pública.
+  Nome  | Zona de disponibilidade  | Bloco CIDR IPv4
+  ------------- | ------------- | ------------- 
+  SUB-privada01 | us-east-1a | 172.28.0.0/24
+  SUB-privada02 | us-east-1b | 172.28.3.0/24
+  SUB-publica01 | us-east-1a | 172.28.1.0/24
+  SUB-publica02 | us-east-1b | 172.28.2.0/24
+
+- Após criar todas as sub-redes, selecione uma sub-rede pública, clique em "ações" e depois em "Editar configurações de sub-rede". Marque a opção "Habilitar endereço IPv4 público de atribuição automática" e salve as alterações;
+- Repita os mesmos passos anteriores para a outra sub-rede pública.
 
 ### Criar Gateway da internet
-- No menu na parte esquerda, clicar em "Gateways da Internet";
-- No canto superior direito, clicar em "Criar gateway da internet";
-- Escolher um nome(no meu caso coloquei "IGW-AT"), e criar o gateway;
-- Selecionar o gateway da internet e associa-lo à VPC criada anteriormente.
+- No menu na parte esquerda, clique em "Gateways da Internet";
+- No canto superior direito, clique em "Criar gateway da internet";
+- Escolha um nome (por exemplo, "IGW-AT") e crie o gateway.;
+- Selecione o gateway da internet criado e associe-o à VPC criada anteriormente.
 
 ### Criar Gateway NAT
 - No menu na parte esquerda, clicar em "Gateways NAT";
 - No canto superior direito, clicar em "Criar gateway NAT";
-- Escolher um nome(no meu caso coloquei "NGW-AT"), e criar o gateway;
-- Selecionar uma sub-rede publica;
-- Em "Tipo de conectividade" manter "Público" selecionado;
+- Escolha um nome (por exemplo, "NGW-AT") e crie o gateway;
+- Selecione uma sub-rede publica;
+- Em "Tipo de conectividade", mantenha selecionada a opção "Público";
 - Clicar em "Alocar IP elástico";
 - Por fim, clicar em "Criar gateway NAT". 
 
 ### Criar tabelas de rotas
 - No menu na parte esquerda, clicar em "Tabela de rotas";
 - No canto superior direito, clicar em "Criar tabela de rotas";
-- Criar duas tabelas de rotas, uma para ser privada e outra publica, ambas usando a VPC criada anteriormente;
-- Após ter as duas tabelas crias, associar as sub-redes em suas respectivas tabelas(com as sub-redes publicas na tabela publica e as sub-redes privadas na tabela privada);
-- Configurando tabela de rotas publica:
-  - Selecionar a tebela de rotas publica e clicar na opção "Rotas" e depois em "Editar rotas";
+- Criar duas tabelas de rotas, uma para ser privada e outra pública, ambas usando a VPC criada anteriormente;
+- Após ter as duas tabelas crias, associar as sub-redes em suas respectivas tabelas(sub-redes públicas na tabela pública e sub-redes privadas na tabela privada);
+- Configurando tabela de rotas pública:
+  - Selecionar a tebela de rotas pública e clicar na opção "Rotas" e depois em "Editar rotas";
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway da Internet" e selecionar o gateway criado anteriormente.
 - Configurando tabela de rotas privada:
-  - Selecionar a tebela de rotas privada e clicar na opção "Rotas" e depois em "Editar rotas";
+  - Selecionar a tabela de rotas privada e clicar na opção "Rotas" e depois em "Editar rotas";
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway NAT" e selecionar o gateway criado anteriormente.
+ 
+### Criar Bastion Host
+- Acesse o serviço EC2 da AWS e clique em "Executar instâncias";
+- Escolha um nome (por exemplo, "BASTION-HOST");
+- Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
+- Em tipo de instância, escolha `t2.micro`;
+- Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
+- Em grupos de segurança, crie um com as seguintes regras de entrada:
+
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ------------- | ------------- | ------------- | -------------
+  SSH | TCP | 22 | 0.0.0.0/0
+
+- Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
+- Clique em "Executar instância".
