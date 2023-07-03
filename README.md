@@ -65,3 +65,32 @@
 
 - Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
 - Clique em "Executar instância".
+
+### Criar Instância Privada (Wordpress)
+- Ainda no serviço EC2 da AWS, clique novamente em "Executar instâncias";
+- Escolha um nome (por exemplo, "WORDPRESS");
+- Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
+- Em tipo de instância, escolha `t2.micro`;
+- Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
+- Crie um novo grupo de segurança com as seguintes regras de entrada (Lembrando que o Load-Balance ainda não foi criado, os endereços IP podem ser alterados/adicionados posteriormente):
+
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ------------- | ------------- | ------------- | -------------
+  SSH | TCP | 22 | Endereço IPv4 privado do `Bastion-Host`
+  HTTP | TCP | 80 | Endereço IP privado do `Load-Balance`
+  HTTPS | TCP | 443 | Endereço IP privado do `Load-Balance`
+
+- Na seção de "Detalhes avançados", no último item (Dados do usuário), adicionar o seguinte scrpit:
+
+  ```bash
+  #!/bin/bash
+  sudo yum update -y
+  sudo yum install docker -y
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  sudo usermod -a -G docker ec2-user
+  sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  ```
+
+
