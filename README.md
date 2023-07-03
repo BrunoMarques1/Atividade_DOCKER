@@ -66,19 +66,20 @@
 - Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
 - Clique em "Executar instância".
 
-### Criar Instância Privada (Wordpress)
+### Criar Instância Privada (Docker - Wordpress)
 - Ainda no serviço EC2 da AWS, clique novamente em "Executar instâncias";
 - Escolha um nome (por exemplo, "WORDPRESS");
 - Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
 - Em tipo de instância, escolha `t2.micro`;
 - Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
-- Crie um novo grupo de segurança com as seguintes regras de entrada (Lembrando que o Load-Balance ainda não foi criado, os endereços IP podem ser alterados/adicionados posteriormente):
+- Crie um novo grupo de segurança com as seguintes regras de entrada (Lembrando que o Load-Balance e o EFS ainda não foram criados, os endereços IP podem ser alterados/adicionados posteriormente):
 
   Tipo | Protocolo | Intervalo de portas | Origem
   ------------- | ------------- | ------------- | -------------
   SSH | TCP | 22 | Endereço IPv4 privado do `Bastion-Host`
   HTTP | TCP | 80 | Endereço IP privado do `Load-Balance`
   HTTPS | TCP | 443 | Endereço IP privado do `Load-Balance`
+  NFS | TCP | 2049 | Endereço IP privado do `EFS`
 
 - Na seção de "Detalhes avançados", no último item (Dados do usuário), adicionar o seguinte scrpit:
 
@@ -93,4 +94,20 @@
   sudo chmod +x /usr/local/bin/docker-compose
   ```
 
+### Criar e configurar EFS
+- No console AWS procurar pelo serviço EFS;
+- Clicar em "Criar sistema de arquivos";
+- Escolher um nome e escolher a mesma VPC criada anteriormente, depois clicar em "Criar";
+- Voltar para o serviço EC2, na aba de "Grupos de Segurança", criar um grupo para o EFS, com as seguintes regras de entrada:
+  
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ---- | ---- | ---- | ----
+  NFS | TCP | 2049 |  Endereço IPv4 privado do `EFS`
+
+- Já fazendo acesso na instância privada, através do bastion-host, usar os seguintes comandos:
+  - `sudo yum -y install nfs-utils`, para instalar o pacote `nfs-utils`;
+  - `sudo mkdir /mnt/nfs`, para criar um diretório;
+  - `sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 172.28.1.224:/ /mnt/nfs` para montar o sistema de arquivos;
+  - `sudo vim /etc/fstab` para editar o arquivo fstab;
+  - Adicionar a seguinte linha: `172.28.1.224:/    /mnt/nfs         nfs    defaults          0   0 `.
 
