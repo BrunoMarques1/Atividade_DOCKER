@@ -111,3 +111,17 @@
   - `sudo vim /etc/fstab` para editar o arquivo fstab;
   - Adicionar a seguinte linha: `172.28.1.224:/    /mnt/nfs         nfs    defaults          0   0 `.
 
+### Criar RDS
+- Antes de criar o banco de dados, precisamos criar um grupo de segurança para ele, portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
+- Crie um grupo de segurança com as seguintes regras de entrada:
+
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ---- | ---- | ---- | ----
+  MYSQL | TCP | 3306 |  CIDR IPv4 da sua VPC
+
+- No console AWS procurar pelo serviço EFS;
+- Clicar em "Criar banco de dados";
+- Em "Escolher um método de criação de banco de dados", manter "Criação padrão" selecionado;
+- Em "Opções do mecanismo", escolher MySQL;
+- Em "Modelos", escolher "Nível gratuito";
+- Em "Disponibilidade e durabilidade", manter "Cluster de banco de dados"
