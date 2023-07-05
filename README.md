@@ -61,7 +61,7 @@
 
   Tipo | Protocolo | Intervalo de portas | Origem
   ------------- | ------------- | ------------- | -------------
-  SSH | TCP | 22 | 0.0.0.0/0
+  SSH | TCP | 22 | Meu IP
 
 - Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
 - Clique em "Executar instância".
@@ -80,6 +80,7 @@
   HTTP | TCP | 80 | Endereço IP privado do `Load-Balance`
   HTTPS | TCP | 443 | Endereço IP privado do `Load-Balance`
   NFS | TCP | 2049 | Endereço IP privado do `EFS`
+  
 
 - Na seção de "Detalhes avançados", no último item (Dados do usuário), adicionar o seguinte scrpit:
 
@@ -102,7 +103,7 @@
   
   Tipo | Protocolo | Intervalo de portas | Origem
   ---- | ---- | ---- | ----
-  NFS | TCP | 2049 |  Endereço IPv4 privado do `EFS`
+  NFS | TCP | 2049 |  CIDR IPv4 da sua VPC
 
 - Já fazendo acesso na instância privada, através do bastion-host, usar os seguintes comandos:
   - `sudo yum -y install nfs-utils`, para instalar o pacote `nfs-utils`;
@@ -119,9 +120,24 @@
   ---- | ---- | ---- | ----
   MYSQL | TCP | 3306 |  CIDR IPv4 da sua VPC
 
-- No console AWS procurar pelo serviço EFS;
+- No console AWS procurar pelo serviço RDS;
 - Clicar em "Criar banco de dados";
 - Em "Escolher um método de criação de banco de dados", manter "Criação padrão" selecionado;
 - Em "Opções do mecanismo", escolher MySQL;
 - Em "Modelos", escolher "Nível gratuito";
-- Em "Disponibilidade e durabilidade", manter "Cluster de banco de dados"
+- Em configurações:
+  - Identificador da instância de banco de dados: Escolher um nome, por exemplo `wordpressdb`;
+  - Configurações de credenciais: Escolher um nome de usuário principal e sua senha.
+- Em configuração da instância, manter a configuração padrão;
+- Em armazenamento, manter a configuração padrão;
+- Em conectividade:
+  - Em "Recurso de computação", manter selecionado "Não se conectar a um recurso de computação do EC2";
+  - Em "Nuvem privada virtual (VPC)", selecionar a VPC criada anteriormente;
+  - Em "Grupo de sub-redes de banco de dados", manter padrão;
+  - Em "Acesso público", selecionar `Sim`;
+  - Em "Grupo de segurança de VPC (firewall)", seleionar "Selecionar existente" e escolher o grupo criado anteriormente;
+  - O restante das configurações de conectitividade manter o padrão que está;
+- Em "Autenticação de banco de dados", manter selecionado "Autenticação de senha";
+- Em "Monitoramento", manter desabilitado a opção "Hablitar monitoramento avançado";
+- Em "Configuração adicional", apenas adicionar um nome para o banco de dados inicial, por exemplo: `wp_db`
+- Clicar em "Criar banco de dados" ([Resolução para um possível erro](https://github.com/BrunoMarques1/Atividade_DOCKER/blob/main/ErroDB.md)).
