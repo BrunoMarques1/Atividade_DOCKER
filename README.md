@@ -7,6 +7,7 @@
 - Na seção "Bloco CIDR IPv6", mantenha selecionada a opção "Nenhum bloco IPv6";
 - Mantenha a opção "Padrão" selecionada em "Locação";
 - Clique em "Criar VPC".
+<br>
 
 ### Criar Sub-Redes
 - Ainda no serviço VPC, no menu do lado esquerdo, clique em "Sub-redes";
@@ -23,12 +24,14 @@
 
 - Após criar todas as sub-redes, selecione uma sub-rede pública, clique em "ações" e depois em "Editar configurações de sub-rede". Marque a opção "Habilitar endereço IPv4 público de atribuição automática" e salve as alterações;
 - Repita os mesmos passos anteriores para a outra sub-rede pública.
+<br>
 
 ### Criar Gateway da internet
 - No menu na parte esquerda, clique em "Gateways da Internet";
 - No canto superior direito, clique em "Criar gateway da internet";
 - Escolha um nome (por exemplo, "IGW-AT") e crie o gateway.;
 - Selecione o gateway da internet criado e associe-o à VPC criada anteriormente.
+<br>
 
 ### Criar Gateway NAT
 - No menu na parte esquerda, clicar em "Gateways NAT";
@@ -38,6 +41,7 @@
 - Em "Tipo de conectividade", mantenha selecionada a opção "Público";
 - Clicar em "Alocar IP elástico";
 - Por fim, clicar em "Criar gateway NAT". 
+<br>
 
 ### Criar tabelas de rotas
 - No menu na parte esquerda, clicar em "Tabela de rotas";
@@ -50,7 +54,8 @@
 - Configurando tabela de rotas privada:
   - Selecionar a tabela de rotas privada e clicar na opção "Rotas" e depois em "Editar rotas";
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway NAT" e selecionar o gateway criado anteriormente.
- 
+<br>
+
 ### Criar Bastion Host
 - Acesse o serviço EC2 da AWS e clique em "Executar instâncias";
 - Escolha um nome (por exemplo, "BASTION-HOST");
@@ -65,6 +70,7 @@
 
 - Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
 - Clique em "Executar instância".
+<br>
 
 ### Criar Instância Privada (Docker - Wordpress)
 - Ainda no serviço EC2 da AWS, clique novamente em "Executar instâncias";
@@ -94,6 +100,7 @@
   sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
   ```
+<br>
 
 ### Criar e configurar EFS
 - No console AWS procurar pelo serviço EFS;
@@ -110,10 +117,11 @@
   - `sudo mkdir /mnt/nfs`, para criar um diretório;
   - `sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 172.28.1.224:/ /mnt/nfs` para montar o sistema de arquivos;
   - `sudo vim /etc/fstab` para editar o arquivo fstab;
-  - Adicionar a seguinte linha: `172.28.1.224:/    /mnt/nfs         nfs    defaults          0   0 `.
+  - Adicionar a seguinte linha: `IP ou DNS do EFS criado:/    /mnt/nfs         nfs    defaults          0   0 `.
+<br>
 
 ### Criar RDS
-- Antes de criar o banco de dados, precisamos criar um grupo de segurança para ele, portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
+- Antes de criar o banco de dados, precisamos criar um grupo de segurança para ele. Portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
 - Crie um grupo de segurança com as seguintes regras de entrada:
 
   Tipo | Protocolo | Intervalo de portas | Origem
@@ -141,3 +149,61 @@
 - Em "Monitoramento", manter desabilitado a opção "Hablitar monitoramento avançado";
 - Em "Configuração adicional", apenas adicionar um nome para o banco de dados inicial, por exemplo: `wp_db`
 - Clicar em "Criar banco de dados" ([Resolução para um possível erro](https://github.com/BrunoMarques1/Atividade_DOCKER/blob/main/ErroDB.md)).
+<br>
+
+### Subir o container Wordpress 
+- Acessar a instância privada já configurada com Docker e Docker compose;
+- Para criar o container Wordpress, iremos usar o seguinte arquivo docker-compose.yml:
+  ```yml
+  
+  version: '3'
+  services:
+    wordpress:
+      image: wordpress:latest
+      ports:
+        - "80:80"
+      restart: always
+      environment:
+        WORDPRESS_DB_HOST: <Endpoint do banco de dados criado>
+        WORDPRESS_DB_USER: <Usuário criado>
+        WORDPRESS_DB_PASSWORD: <Senha criada>
+        WORDPRESS_DB_NAME: <Banco de dados inicial criado>
+      volumes:
+        - /mnt/nfs/wordpress:/var/www/html
+
+  ```
+- Dentro do mesmo diretório em que o arquivo citado acima estiver, usar o comando docker-compose up.
+<br>
+
+### Criação do Load Balancer
+- Antes de criar o Load Balancer, precisamos criar um grupo de segurança para ele. Portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
+- Crie um grupo de segurança com as seguintes regras de entrada:
+
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ---- | ---- | ---- | ----
+  HTTP | TCP | 80 | 0.0.0.0/0
+
+- Além do grupo de segurança, precisamos criar um grupo de destino. Ainda no serviço EC2, entre na aba de "Grupos de destino";
+- Crie um grupo de destino com as seguintes configurações:
+  - Tipo de destino: Instâncias
+  - Nome do grupo de destino: Escolha um nome (por exemplo, TG-AT)
+  - Protocolo: HTTP | Porta: 80
+  - VPC: Selecione a VPC criada anteriormente
+  - Versão do protocolo: HTTP1
+  - Protocolo da verificação de integridade: HTTP
+- No Serviço EC2, da AWS, selecionar entrar na aba de "Load balancers" e clicar em "Criar load balancer";
+- Em "Tipos de load balancer", selecionar `Application Load Balancer`;
+- A configuração do load balancer será a seguinte:
+  - Nome: Esolha um nome (por exemplo, LB-AT)
+  - Esquema: Voltado para a internet
+  - Tipo de enereço IP: IPv4
+- O mapeamento de rede será:
+  - VPC: VPC criada anteriormente
+  - Mapeamentos: Selecionar as duas zonas de disponibilidade
+- Em "Grupos de segurança", selecionar o criado anteriomente;
+- Em "Listeners e roteamento", configurar da seguinte maneira:
+  - Protocolo: HTTP
+  - Porta: 80
+  - Ação padrão: Selecionar o grupo de destino criado anteriormente
+- Clicar em "Criar load balancer".
+
