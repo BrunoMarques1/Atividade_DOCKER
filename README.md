@@ -83,11 +83,9 @@
   Tipo | Protocolo | Intervalo de portas | Origem
   ------------- | ------------- | ------------- | -------------
   SSH | TCP | 22 | Endereço IPv4 privado do `Bastion-Host`
-  HTTP | TCP | 80 | Endereço IP privado do `Load-Balance`
-  HTTPS | TCP | 443 | Endereço IP privado do `Load-Balance`
+  HTTP | TCP | 80 | Grupo de segurança do `Load-Balance`
   NFS | TCP | 2049 | Endereço IP privado do `EFS`
   
-
 - Na seção de "Detalhes avançados", no último item (Dados do usuário), adicionar o seguinte scrpit:
 
   ```bash
@@ -100,6 +98,15 @@
   sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
   ```
+<br>
+
+### Acessando sua instância privada através do bastion host de forma segura
+- Para fazer o acesso na instância privada através do bastion host usaremos o `ssh-agent`, para que não seja preciso copiar a chave .pem para dentro da instância;
+- Sendo assim, em sua máquina local, use o comando `ssh-add SUA_CHAVE.pem`;
+- Se quiser verficiar se a chave foi adicionada, pode usar o comando `ssh-add -l`;
+- Agora, para acessar o bastion host use o seguinte comando `ssh -A -i SUA_CHAVE.pem ec2-user@IP_DO_SEU_BASTION_HOST`;
+- Por fim, para acessar a instância privada use o seguinte comando `ssh ec2-user@IP_DA_SUA_INSTÂNCIA`.
+
 <br>
 
 ### Criar e configurar EFS
@@ -199,7 +206,7 @@
   - Tipo de enereço IP: IPv4
 - O mapeamento de rede será:
   - VPC: VPC criada anteriormente
-  - Mapeamentos: Selecionar as duas zonas de disponibilidade
+  - Mapeamentos: Selecionar as duas zonas de disponibilidade, com a sub-rede publica
 - Em "Grupos de segurança", selecionar o criado anteriomente;
 - Em "Listeners e roteamento", configurar da seguinte maneira:
   - Protocolo: HTTP
