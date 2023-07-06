@@ -182,7 +182,7 @@
 - Dentro do mesmo diretório em que o arquivo citado acima estiver, usar o comando docker-compose up.
 <br>
 
-### Criação do Load Balancer
+### Criar Load Balancer
 - Antes de criar o Load Balancer, precisamos criar um grupo de segurança para ele. Portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
 - Crie um grupo de segurança com as seguintes regras de entrada:
 
@@ -214,3 +214,37 @@
   - Ação padrão: Selecionar o grupo de destino criado anteriormente
 - Clicar em "Criar load balancer".
 
+<br>
+
+### Criar AMI
+- Antes de criar e configurar o auto scaling, precisamos criar uma AMI com base na instância privada que criamos anteriormente;
+- Ir na aba de instâncias e clicar com o botão direito na instância privada que configuramos anteriormente;
+- Selecionar "Imagem e modelos" e clicar em "Criar imagem";
+- Escolher um nome (por exemplo, AMI-AT) e uma descrição;
+- Manter o resto das configurações que já vem padrão e clicar em "Criar imagem".
+
+<br>
+
+### Criar Modelo de Execução
+- Além da AMI, antes de criar o auto scaling precisamos criar um `Modelo de execução`, presente no menu esquerdo do serviço EC2 da AWS;
+- Clicar em "Criar modelo de execução";
+- Escolher um nome (por exemplo, ME-AT) e uma descrição;
+- Em "Imagens de aplicação e de sistema operacional", escolher a imagem criada anteriormente
+- Em "Tipo de instância", selecionar `t2.micro`;
+- Em "Pares de chaves", você pode selecionar uma chave `.pem` já criada ou criar outra;
+- Em "Configurações de sub-rede", configurar da seguinte maneira:
+  - Sub-rede: Não incluir no modelo de execução
+  - Firewall: Selecionar o grupo de segurança criado anteriormente
+- Em "Armazenamento", verificar apenas se a opção "Excluir no encerramento" está como `Sim`;
+- Em "Detalhes avançados", adicionar o seguinte script em dados do usuário:
+
+  ```bash
+  #!/bin/bash
+  sudo yum update -y
+  sudo yum install nfs-utils -y
+  sudo mkdir -p /mnt/nfs
+  sudo echo "fs-05eb47462a8d30dda.efs.us-east-1.amazonaws.com:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
+  sudo mount -a
+  ```
+- O scrip serve para montar o volume EFS nas instâncias que o Auto Scaling for subir;
+- Clique em "Criar modelo de execução".
