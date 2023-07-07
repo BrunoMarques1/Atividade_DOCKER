@@ -32,14 +32,16 @@
 ### Criar VPC
 - Acesse o serviço VPC da AWS;
 - No canto superior esquerdo, clique em "Criar VPC";
-- Selecione "Somente VPC";
-- Escolha um nome para a VPC (por exemplo, "VPC-AT");
-- Na seção "Bloco CIDR IPv4", selecione "Entrada manual de CIDR IPv4" e, em seguida, insira o CIDR IPv4 desejado (por exemplo, 172.28.0.0/16);
-- Na seção "Bloco CIDR IPv6", mantenha selecionada a opção "Nenhum bloco IPv6";
-- Mantenha a opção "Padrão" selecionada em "Locação";
-- Clique em "Criar VPC".
-- Após criar sua VPC, selecione ela e clique em "Ações";
-- Em "Configurações de DNS", marque as duas caixas e clique em "Salvar", dessa forma:
+- Configure sua VPC da seguinte maneira:
+  - Recursos a serem criados: `Somente VPC`;
+  - Nome: Escolha um nome, por exemplo, `VPC-AT`;
+  - Bloco CIDR IPv4: `Entrada manual de CIDR IPv4`;
+  - CIDR IPv4: Escolha um CIDR IPv4, por exemplo, `172.28.0.0/16`;
+  - Bloco CIDR IPv6: `Nenhum bloco CIDR IPv6`;
+  - Locação: `Padrão`.
+- Clique em "Criar VPC";
+- Após criar sua VPC, selecione-a e clique em "Ações".
+- Em "Configurações de DNS", marque as duas caixas e clique em "Salvar". Veja a imagem abaixo como referência:
   
   ![image](https://github.com/BrunoMarques1/Atividade_DOCKER/assets/127341401/dc17aaaf-06d2-4429-af5b-84f4696e6e3b)
 
@@ -47,6 +49,7 @@
 
 ### Criar Sub-Redes
 - Ainda no serviço VPC, no menu do lado esquerdo, clique em "Sub-redes";
+- Configure suas Sub-redes da seguinte forma:
 - Clique em "Criar sub-rede" no canto superior direito;
 - Em "ID da VPC", selecione a VPC criada anteriormente;
 - Configure quatro sub-redes com as seguintes configurações:
@@ -60,6 +63,7 @@
 
 - Após criar todas as sub-redes, selecione uma sub-rede pública, clique em "ações" e depois em "Editar configurações de sub-rede". Marque a opção "Habilitar endereço IPv4 público de atribuição automática" e salve as alterações;
 - Repita os mesmos passos anteriores para a outra sub-rede pública.
+
 <br>
 
 ### Criar Gateway da internet
@@ -75,8 +79,8 @@
 - Escolha um nome (por exemplo, "NGW-AT") e crie o gateway;
 - Selecione uma sub-rede publica;
 - Em "Tipo de conectividade", mantenha selecionada a opção "Público";
-- Clicar em "Alocar IP elástico";
-- Por fim, clicar em "Criar gateway NAT". 
+- Clique em "Alocar IP elástico";
+- Por fim, clique em "Criar gateway NAT". 
 <br>
 
 ### Criar tabelas de rotas
@@ -96,73 +100,80 @@
 ### Criar EFS
 - No console AWS procurar pelo serviço EFS;
 - Clicar em "Criar sistema de arquivos";
-- Escolher um nome e escolher a mesma VPC criada anteriormente, depois clicar em "Criar";
-- Voltar para o serviço EC2, na aba de "Grupos de Segurança", criar um grupo para o EFS, com as seguintes regras de entrada:
+- Escolha um nome e selecione a mesma VPC criada anteriormente, em seguida, clique em "Criar".
+- Volte para o serviço EC2 e, na aba de "Grupos de Segurança", crie um grupo para o EFS com as seguintes regras de entrada:
   
   Tipo | Protocolo | Intervalo de portas | Origem
   ---- | ---- | ---- | ----
   NFS | TCP | 2049 |  CIDR IPv4 da sua VPC
 
-- Voltando para o serviço de EFS, clique no sistema de arquivos recém criado e vá na parte de "Rede";
-- Mude todos os Security Groups para o mesmo criado anteriormente;
+- Volte para o serviço EFS, clique no sistema de arquivos recém-criado e vá para a seção "Rede".
+- Mude todos os Security Groups para o mesmo recém criado;
 
 <br>
 
 ### Criar Bastion Host
 - Acesse o serviço EC2 da AWS e clique em "Executar instâncias";
-- Escolha um nome (por exemplo, "BASTION-HOST");
-- Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
-- Em tipo de instância, escolha `t2.micro`;
-- Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
-- Em VPC escolha a criada anteriormente, e em sub-rede selecionar uma das públicas;
-- Em grupos de segurança, crie um com as seguintes regras de entrada:
-
-  Tipo | Protocolo | Intervalo de portas | Origem
-  ------------- | ------------- | ------------- | -------------
-  SSH | TCP | 22 | Meu IP
-
-- Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
-- Clique em "Executar instância".
+- Configure uma instância EC2 com as seguintes especificações:
+  - Nome e Tags: Escolha um nome (por exemplo, `BASTION-HOST`) e possíveis tags necessárias;
+  - AMI: `Amazon Linux 2023 AMI`;
+  - Tipo de instância: `t2.micro`;
+  - Par de chaves: Crie uma nova chave .pem;
+  - VPC: Selecione a VPC criada anteriormente;
+  - Sub-rede: Selecione uma das sub-redes `Públicas`, criada anteriormente;
+  - Grupos de segurança: Crie um grupo de segurança com as seguintes regras de entrada:
+    
+      Tipo | Protocolo | Intervalo de portas | Origem
+      ------------- | ------------- | ------------- | -------------
+      SSH | TCP | 22 | Meu IP
+  - Armazenamento: `1x8 | GiB gp3`;
+- Clique em "Executar instância". 
 
 <br>
 
 ### Criar Instância Privada (Docker - Wordpress)
 - Ainda no serviço EC2 da AWS, clique novamente em "Executar instâncias";
-- Escolha um nome (por exemplo, "WORDPRESS");
-- Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
-- Em tipo de instância, escolha `t2.micro`;
-- Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
-- Em VPC escolha a criada anteriormente, e em sub-rede selecionar uma das privadas;
-- Crie um novo grupo de segurança com as seguintes regras de entrada (Lembrando que o Load-Balance e o EFS ainda não foram criados, os endereços IP podem ser alterados/adicionados posteriormente):
+- Configure uma instância EC2 com as seguintes especificações:
+  - Nome e Tags: Escolha um nome (por exemplo, `WORDPRESS`) e possíveis tags necessárias;
+  - AMI: `Amazon Linux 2023 AMI`;
+  - Tipo de instância: `t2.micro`;
+  - Par de chaves: Crie uma nova chave .pem ou use a mesma criada para o Bastio host;
+  - VPC: Selecione a VPC criada anteriormente;
+  - Sub-rede: Selecione uma das sub-redes `Privadas`, criada anteriormente;
+  - Grupos de segurança: Crie um grupo de segurança com as seguintes regras de entrada (Lembrando que o Load Balancer ainda não foi criado, as informações de origem podem ser alterados/adicionados posteriormente):
+    
+    Tipo | Protocolo | Intervalo de portas | Origem
+    ------------- | ------------- | ------------- | -------------
+    SSH | TCP | 22 | Endereço IPv4 privado do `Bastion-Host`
+    HTTP | TCP | 80 | Grupo de segurança do `Load-Balance`
+    NFS | TCP | 2049 | Endereço IP privado do `EFS`
+    
+  - Armazenamento: `1x8 | GiB gp3`;
+  - Detalhes avançados: Na parte de `Dados do usuário`, adicione o seguinte script:
 
-  Tipo | Protocolo | Intervalo de portas | Origem
-  ------------- | ------------- | ------------- | -------------
-  SSH | TCP | 22 | Endereço IPv4 privado do `Bastion-Host`
-  HTTP | TCP | 80 | Grupo de segurança do `Load-Balance`
-  NFS | TCP | 2049 | Endereço IP privado do `EFS`
-  
-- Na seção de "Detalhes avançados", no último item (Dados do usuário), adicionar o seguinte scrpit:
+    ```bash
+    #!/bin/bash
+    su do yum update -y
+    sudo yum install nfs-utils -y
+    sudo mkdir -p /mnt/nfs
+    sudo echo DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
+    sudo mount -a
+    sudo yum install docker -y
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -a -G docker ec2-user
+    sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+- O script acima realiza a configuração necessária para montar o sistema de arquivos EFS, instalar e configurar o Docker e instalar o Docker Compose na instância EC2.
+- Clique em "Executar instância".  
 
-  ```bash
-  #!/bin/bash
-  sudo yum update -y
-  sudo yum install nfs-utils -y
-  sudo mkdir -p /mnt/nfs
-  sudo echo DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
-  sudo mount -a
-  sudo yum install docker -y
-  sudo systemctl start docker
-  sudo systemctl enable docker
-  sudo usermod -a -G docker ec2-user
-  sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-  sudo chmod +x /usr/local/bin/docker-compose
-  ```
 <br>
 
 ### Acessando sua instância privada através do bastion host de forma segura
 - Para fazer o acesso na instância privada através do bastion host usaremos o `ssh-agent`, para que não seja preciso copiar a chave .pem para dentro da instância;
-- Sendo assim, em sua máquina local, use o comando `ssh-add SUA_CHAVE.pem`;
-- Se quiser verficiar se a chave foi adicionada, pode usar o comando `ssh-add -l`;
+- Em sua máquina local, use o comando ssh-add `SUA_CHAVE.pem`;
+- Caso queira verficiar se a chave foi adicionada, pode usar o comando `ssh-add -l`;
 - Agora, para acessar o bastion host use o seguinte comando `ssh -A -i SUA_CHAVE.pem ec2-user@IP_DO_SEU_BASTION_HOST`;
 - Por fim, para acessar a instância privada use o seguinte comando `ssh ec2-user@IP_DA_SUA_INSTÂNCIA`.
 
@@ -178,29 +189,29 @@
 
 - No console AWS procurar pelo serviço RDS;
 - Clicar em "Criar banco de dados";
-- Em "Escolher um método de criação de banco de dados", manter "Criação padrão" selecionado;
-- Em "Opções do mecanismo", escolher MySQL;
-- Em "Modelos", escolher "Nível gratuito";
-- Em configurações:
-  - Identificador da instância de banco de dados: Escolher um nome, por exemplo `wordpressdb`;
-  - Configurações de credenciais: Escolher um nome de usuário principal e sua senha.
-- Em configuração da instância, manter a configuração padrão;
-- Em armazenamento, manter a configuração padrão;
-- Em conectividade:
-  - Em "Recurso de computação", manter selecionado "Não se conectar a um recurso de computação do EC2";
-  - Em "Nuvem privada virtual (VPC)", selecionar a VPC criada anteriormente;
-  - Em "Grupo de sub-redes de banco de dados", manter padrão;
-  - Em "Acesso público", selecionar `Sim`;
-  - Em "Grupo de segurança de VPC (firewall)", seleionar "Selecionar existente" e escolher o grupo criado anteriormente;
-  - O restante das configurações de conectitividade manter o padrão que está;
-- Em "Autenticação de banco de dados", manter selecionado "Autenticação de senha";
-- Em "Monitoramento", manter desabilitado a opção "Hablitar monitoramento avançado";
-- Em "Configuração adicional", apenas adicionar um nome para o banco de dados inicial, por exemplo: `wp_db`
+- Crie um banco de dados com as seguintes configurações:
+    - Método de criação: `Ciração padrão`;
+    - Opções de mecanismo: `MySQL`;
+    - Modelos: `Nível Gratuito`;
+    - Identificador da instância de banco de dados: Escolher um nome, por exemplo `wordpressdb`;
+    - Configurações de credenciais: Escolher um nome de usuário principal e sua senha;
+    - Configuração da instância: Manter a configuração padrão;
+    - Armazenamento: Manter a configuração padrão;
+    - Recurso de computação: `Não se conectar a um recurso de computação do EC2`; 
+    - Tipo de rede: `IPv4`;
+    - VPC: Selecionar a VPC criada anteriormente;
+    - Grupo de sub-redes de banco de dados: Manter a configuração padrão;
+    - Acesso público: `Sim`;
+    - Grupo de segurança de VPC: Selecionar o grupo criado anteriormente;
+    - Autenticação de banco de dados: `Autenticação de senha`;
+    - Monitoramento: Manter desabilitado a opção `Hablitar monitoramento avançado`;
+    - Em "Configuração adicional", apenas adicionar um nome para o banco de dados inicial (por exemplo, `wp_db`).
 - Clicar em "Criar banco de dados".
+
 <br>
 
 ### Subir o container Wordpress 
-- Acessar a instância privada já configurada com Docker e Docker compose;
+- Acessar a instância privada já configurada com Docker e Docker-compose;
 - Para criar o container Wordpress, iremos usar o seguinte arquivo docker-compose.yml:
   ```yml
   
@@ -218,9 +229,9 @@
         WORDPRESS_DB_NAME: <Banco de dados inicial criado>
       volumes:
         - /mnt/nfs/wordpress:/var/www/html
-
   ```
-- Dentro do mesmo diretório em que o arquivo citado acima estiver, usar o comando docker-compose up.
+- Dentro do mesmo diretório em que o arquivo mencionado acima estiver, use o comando `docker-compose up`.
+
 <br>
 
 # Criar/Configurar: Load Balancer, AMI, Modelo de execução e Auto Scaling
@@ -234,36 +245,36 @@
 
 - Além do grupo de segurança, precisamos criar um grupo de destino. Ainda no serviço EC2, entre na aba de "Grupos de destino";
 - Crie um grupo de destino com as seguintes configurações:
-  - Tipo de destino: Instâncias
-  - Nome do grupo de destino: Escolha um nome (por exemplo, TG-AT)
-  - Protocolo: HTTP | Porta: 80
-  - VPC: Selecione a VPC criada anteriormente
-  - Versão do protocolo: HTTP1
-  - Protocolo da verificação de integridade: HTTP
-- No Serviço EC2, da AWS, selecionar entrar na aba de "Load balancers" e clicar em "Criar load balancer";
+  - Tipo de destino: `Instâncias`;
+  - Nome do grupo de destino: Escolha um nome (por exemplo, `TG-AT`);
+  - Protocolo: `HTTP` | Porta: `80`;
+  - VPC: Selecione a VPC criada anteriormente;
+  - Versão do protocolo: `HTTP1`;
+  - Protocolo da verificação de integridade: `HTTP`;
+- No serviço EC2 da AWS, selecione a aba "Load Balancers" e clique em "Criar load balancer";
 - Em "Tipos de load balancer", selecionar `Application Load Balancer`;
-- A configuração do load balancer será a seguinte:
-  - Nome: Esolha um nome (por exemplo, LB-AT)
-  - Esquema: Voltado para a internet
-  - Tipo de enereço IP: IPv4
-- O mapeamento de rede será:
-  - VPC: VPC criada anteriormente
-  - Mapeamentos: Selecionar as duas zonas de disponibilidade, com a sub-rede publica
+- Configure o load balancer da seguinte forma:
+  - Nome: Esolha um nome (por exemplo, `LB-AT`);
+  - Esquema: `Voltado para a internet`;
+  - Tipo de enereço IP: `IPv4`;
+- Em "Mapeamento de rede":
+  - VPC: VPC criada anteriormente;
+  - Mapeamentos: Selecionar as duas zonas de disponibilidade, com a sub-rede publica;
 - Em "Grupos de segurança", selecionar o criado anteriomente;
 - Em "Listeners e roteamento", configurar da seguinte maneira:
-  - Protocolo: HTTP
-  - Porta: 80
-  - Ação padrão: Selecionar o grupo de destino criado anteriormente
+  - Protocolo: `HTTP`
+  - Porta: `80`
+  - Ação padrão: Selecionar o grupo de destino criado anteriormente;
 - Clicar em "Criar load balancer".
 
 <br>
 
 ### Criar AMI
 - Antes de criar e configurar o auto scaling, precisamos criar uma AMI com base na instância privada que criamos anteriormente;
-- Ir na aba de instâncias e clicar com o botão direito na instância privada que configuramos anteriormente;
+- Ir na aba de instâncias e clicar com o botão direito na instância privada configurada anteriormente;
 - Selecionar "Imagem e modelos" e clicar em "Criar imagem";
-- Escolher um nome (por exemplo, AMI-AT) e uma descrição;
-- Manter o resto das configurações que já vem padrão e clicar em "Criar imagem".
+- Escolher um nome (por exemplo, `AMI-AT`) e uma descrição;
+- Mantenha as demais configurações padrão e clique em "Criar imagem".
 
 <br>
 
@@ -271,7 +282,7 @@
 - Além da AMI, antes de criar o auto scaling precisamos criar um `Modelo de execução`, presente no menu esquerdo do serviço EC2 da AWS;
 - Clicar em "Criar modelo de execução";
 - Escolher um nome (por exemplo, ME-AT) e uma descrição;
-- Em "Imagens de aplicação e de sistema operacional", escolher a imagem criada anteriormente
+- Em "Imagens de aplicação e de sistema operacional", escolher a imagem criada anteriormente;
 - Em "Tipo de instância", selecionar `t2.micro`;
 - Em "Pares de chaves", você pode selecionar uma chave `.pem` já criada ou criar outra;
 - Em "Configurações de sub-rede", configurar da seguinte maneira:
