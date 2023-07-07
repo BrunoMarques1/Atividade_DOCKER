@@ -153,7 +153,7 @@
 
     ```bash
     #!/bin/bash
-    su do yum update -y
+    sudo yum update -y
     sudo yum install nfs-utils -y
     sudo mkdir -p /mnt/nfs
     sudo echo DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
