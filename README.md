@@ -7,6 +7,11 @@
 - Na seção "Bloco CIDR IPv6", mantenha selecionada a opção "Nenhum bloco IPv6";
 - Mantenha a opção "Padrão" selecionada em "Locação";
 - Clique em "Criar VPC".
+- Após criar sua VPC, selecione ela e clique em "Ações";
+- Em "Configurações de DNS", marque as duas caixas e clique em "Salvar", dessa forma:
+  
+  ![image](https://github.com/BrunoMarques1/Atividade_DOCKER/assets/127341401/dc17aaaf-06d2-4429-af5b-84f4696e6e3b)
+
 <br>
 
 ### Criar Sub-Redes
@@ -56,12 +61,28 @@
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway NAT" e selecionar o gateway criado anteriormente.
 <br>
 
+### Criar EFS
+- No console AWS procurar pelo serviço EFS;
+- Clicar em "Criar sistema de arquivos";
+- Escolher um nome e escolher a mesma VPC criada anteriormente, depois clicar em "Criar";
+- Voltar para o serviço EC2, na aba de "Grupos de Segurança", criar um grupo para o EFS, com as seguintes regras de entrada:
+  
+  Tipo | Protocolo | Intervalo de portas | Origem
+  ---- | ---- | ---- | ----
+  NFS | TCP | 2049 |  CIDR IPv4 da sua VPC
+
+- Voltando para o serviço de EFS, clique no sistema de arquivos recém criado e vá na parte de "Rede";
+- Mude todos os Security Groups para o mesmo criado anteriormente;
+
+<br>
+
 ### Criar Bastion Host
 - Acesse o serviço EC2 da AWS e clique em "Executar instâncias";
 - Escolha um nome (por exemplo, "BASTION-HOST");
 - Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
 - Em tipo de instância, escolha `t2.micro`;
 - Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
+- Em VPC escolha a criada anteriormente, e em sub-rede selecionar uma das públicas;
 - Em grupos de segurança, crie um com as seguintes regras de entrada:
 
   Tipo | Protocolo | Intervalo de portas | Origem
@@ -70,6 +91,7 @@
 
 - Em armazenamento, mantenha o padrão de 1x 8 GiB gp3;
 - Clique em "Executar instância".
+
 <br>
 
 ### Criar Instância Privada (Docker - Wordpress)
@@ -78,6 +100,7 @@
 - Na parte de imagem, escolha `Amazon Linux 2023 AMI`;
 - Em tipo de instância, escolha `t2.micro`;
 - Em pares de chaves, você pode usar uma chave existente no formato .pem, caso contrário, crie uma nova chave do tipo RSA no formato .pem;
+- Em VPC escolha a criada anteriormente, e em sub-rede selecionar uma das privadas;
 - Crie um novo grupo de segurança com as seguintes regras de entrada (Lembrando que o Load-Balance e o EFS ainda não foram criados, os endereços IP podem ser alterados/adicionados posteriormente):
 
   Tipo | Protocolo | Intervalo de portas | Origem
@@ -91,6 +114,10 @@
   ```bash
   #!/bin/bash
   sudo yum update -y
+  sudo yum install nfs-utils -y
+  sudo mkdir -p /mnt/nfs
+  sudo echo DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
+  sudo mount -a
   sudo yum install docker -y
   sudo systemctl start docker
   sudo systemctl enable docker
@@ -107,24 +134,6 @@
 - Agora, para acessar o bastion host use o seguinte comando `ssh -A -i SUA_CHAVE.pem ec2-user@IP_DO_SEU_BASTION_HOST`;
 - Por fim, para acessar a instância privada use o seguinte comando `ssh ec2-user@IP_DA_SUA_INSTÂNCIA`.
 
-<br>
-
-### Criar e configurar EFS
-- No console AWS procurar pelo serviço EFS;
-- Clicar em "Criar sistema de arquivos";
-- Escolher um nome e escolher a mesma VPC criada anteriormente, depois clicar em "Criar";
-- Voltar para o serviço EC2, na aba de "Grupos de Segurança", criar um grupo para o EFS, com as seguintes regras de entrada:
-  
-  Tipo | Protocolo | Intervalo de portas | Origem
-  ---- | ---- | ---- | ----
-  NFS | TCP | 2049 |  CIDR IPv4 da sua VPC
-
-- Já fazendo acesso na instância privada, através do bastion-host, usar os seguintes comandos:
-  - `sudo yum -y install nfs-utils`, para instalar o pacote `nfs-utils`;
-  - `sudo mkdir /mnt/nfs`, para criar um diretório;
-  - `sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 172.28.1.224:/ /mnt/nfs` para montar o sistema de arquivos;
-  - `sudo vim /etc/fstab` para editar o arquivo fstab;
-  - Adicionar a seguinte linha: `IP ou DNS do EFS criado:/    /mnt/nfs         nfs    defaults          0   0 `.
 <br>
 
 ### Criar RDS
@@ -155,7 +164,7 @@
 - Em "Autenticação de banco de dados", manter selecionado "Autenticação de senha";
 - Em "Monitoramento", manter desabilitado a opção "Hablitar monitoramento avançado";
 - Em "Configuração adicional", apenas adicionar um nome para o banco de dados inicial, por exemplo: `wp_db`
-- Clicar em "Criar banco de dados" ([Resolução para um possível erro](https://github.com/BrunoMarques1/Atividade_DOCKER/blob/main/ErroDB.md)).
+- Clicar em "Criar banco de dados".
 <br>
 
 ### Subir o container Wordpress 
@@ -234,17 +243,30 @@
 - Em "Pares de chaves", você pode selecionar uma chave `.pem` já criada ou criar outra;
 - Em "Configurações de sub-rede", configurar da seguinte maneira:
   - Sub-rede: Não incluir no modelo de execução
-  - Firewall: Selecionar o grupo de segurança criado anteriormente
+  - Firewall: Selecionar o grupo de segurança `privado` criado anteriormente
 - Em "Armazenamento", verificar apenas se a opção "Excluir no encerramento" está como `Sim`;
-- Em "Detalhes avançados", adicionar o seguinte script em dados do usuário:
-
-  ```bash
-  #!/bin/bash
-  sudo yum update -y
-  sudo yum install nfs-utils -y
-  sudo mkdir -p /mnt/nfs
-  sudo echo "fs-05eb47462a8d30dda.efs.us-east-1.amazonaws.com:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
-  sudo mount -a
-  ```
-- O scrip serve para montar o volume EFS nas instâncias que o Auto Scaling for subir;
 - Clique em "Criar modelo de execução".
+
+<br>
+
+### Criar Auto Scaling
+- Ainda no painel EC2, no menu esquerdo clicar em "Grupos Auto Scaling";
+- Escolher um nome (por exemplo, AS-AT) e selecionar o modelo de execução criado anteriormente;
+- Em "Rede", configurar da seguinte maneira:
+  - VPC: VPC criada anteriormente
+  - Zonas de disponibilidade e sub-redes: Selecionar as duas sub-redes privadas criadas anteriormente
+- Clicar em "Próximo";
+- Configurações de "Balanceamento de carga":
+  - Selecione "Anexar a um balanceador de carga existente";
+  - Em "Anexar a um balanceador de carga existe", mantenha selecionado "Escolha entre seus grupos de destino de balanceador de carga" e selecione o grupo de destino criado anteriormente
+- Em "Verificações de integridade", selecione `Ative as verificações de integridade do Elastic Load Balancing`;
+- Clique em "Próximo";
+- Configurações de "Tamanho do grupo":
+  - Capacidade desejada: 2
+  - Capacdade mínima: 2
+  - Capacidade máxima: 4
+- Em "Políticas de escalabilidade", marque "Política de dimensionamento com monitoramento do objetivo";
+- Clique em "Próximo";
+- Não adicione nada em notificações, clique em "Próximo";
+- Não adicione nada em etiquetas, clique em "Próximo";
+- No painel de "Análise", verifique se as configurações estão corretas e clique em "Criar grupo do Auto Scaling".
