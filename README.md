@@ -1,3 +1,34 @@
+<div align="center">
+  <h1>Atividade - AWS - Docker</h1>
+</div>
+
+# Descrição: 
+### Realizar a implementação da seguinte arquitetura AWS no seu ambiente
+![image](https://github.com/BrunoMarques1/Atividade_DOCKER/assets/127341401/e412bb89-811c-4f1f-a8f9-b87715a1cc59)
+
+### Requisitos
+1. instalação e configuração do DOCKER ou CONTAINERD no host EC2;
+  Ponto adicional para o trabalho utilizar a instalação via script de Start Instance (user_data.sh)
+
+2. Efetuar Deploy de uma aplicação Wordpress com: container de aplicação RDS database Mysql
+
+3. configuração da utilização do serviço EFS AWS para estáticos do container de aplicação Wordpress
+
+4. configuração do serviço de Load Balancer AWS para a aplicação Wordpress
+
+### Pontos de atenção:
+- Não utilizar ip público para saída do serviços WP (Evitem publicar o serviço WP via IP Público)
+- Sugestão para o tráfego de internet sair pelo LB (Load Balancer)
+- Pastas públicas e estáticos do wordpress sugestão de utilizar o EFS (Elastic File System)
+- Fica a critério de cada integrante (ou dupla) usar Dockerfile ou Dockercompose;
+- Necessário demonstrar a aplicação wordpress funcionando (tela de login)
+- Aplicação Wordpress precisa estar rodando na porta 80 ou 8080;
+- Utilizar repositório git para versionamento;
+- Criar documentação.
+
+<br>
+
+# Criar/Configurar: VPC, Sub-redes, Gateway da internet, Gateway NAT e Tabela de Rotas
 ### Criar VPC
 - Acesse o serviço VPC da AWS;
 - No canto superior esquerdo, clique em "Criar VPC";
@@ -61,6 +92,7 @@
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway NAT" e selecionar o gateway criado anteriormente.
 <br>
 
+# Criar/Configurar: EFS, Bastion Host, Instância com Wordpress, Acesso à instância privada e RDS
 ### Criar EFS
 - No console AWS procurar pelo serviço EFS;
 - Clicar em "Criar sistema de arquivos";
@@ -191,6 +223,7 @@
 - Dentro do mesmo diretório em que o arquivo citado acima estiver, usar o comando docker-compose up.
 <br>
 
+# Criar/Configurar: Load Balancer, AMI, Modelo de execução e Auto Scaling
 ### Criar Load Balancer
 - Antes de criar o Load Balancer, precisamos criar um grupo de segurança para ele. Portanto, vá até o serviço EC2 e entre em "Grupos de segurança";
 - Crie um grupo de segurança com as seguintes regras de entrada:
