@@ -26,6 +26,11 @@
 - Utilizar repositório git para versionamento;
 - Criar documentação.
 
+### Grupo:
+- [Pedro Liu](https://github.com/PedroTxfl/Projeto_docker_wordpress) 
+- [Bruno Marques](https://github.com/BrunoMarques1/Atividade_DOCKER/tree/main)
+- [José Toniolo](https://github.com/vitortoniolo/PB-AtividadeDocker)
+
 <br>
 
 # Criar/Configurar: VPC, Sub-redes, Gateway da internet, Gateway NAT e Tabela de Rotas
