@@ -101,7 +101,7 @@
   - Clicar em "Adicionar rota", na parte de "Destino" selecionar `0.0.0.0/0` e em "Alvo" escolher "Gateway NAT" e selecionar o gateway criado anteriormente.
 <br>
 
-# Criar/Configurar: EFS, Bastion Host, Instância com Wordpress, Acesso à instância privada e RDS
+# Criar/Configurar: EFS, Bastion Host, Instância com Wordpress e RDS
 ### Criar EFS
 - No console AWS procurar pelo serviço EFS;
 - Clicar em "Criar sistema de arquivos";
@@ -172,15 +172,6 @@
     ```
 - O script acima realiza a configuração necessária para montar o sistema de arquivos EFS, instalar e configurar o Docker e instalar o Docker Compose na instância EC2.
 - Clique em "Executar instância".  
-
-<br>
-
-### Acessando sua instância privada através do bastion host de forma segura
-- Para fazer o acesso na instância privada através do bastion host usaremos o `ssh-agent`, para que não seja preciso copiar a chave .pem para dentro da instância;
-- Em sua máquina local, use o comando ssh-add `SUA_CHAVE.pem`;
-- Caso queira verficiar se a chave foi adicionada, pode usar o comando `ssh-add -l`;
-- Agora, para acessar o bastion host use o seguinte comando `ssh -A -i SUA_CHAVE.pem ec2-user@IP_DO_SEU_BASTION_HOST`;
-- Por fim, para acessar a instância privada use o seguinte comando `ssh ec2-user@IP_DA_SUA_INSTÂNCIA`.
 
 <br>
 
