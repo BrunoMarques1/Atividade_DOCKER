@@ -156,7 +156,7 @@
     sudo yum update -y
     sudo yum install nfs-utils -y
     sudo mkdir -p /mnt/nfs
-    sudo echo DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
+    sudo echo "DNS_OU_IP_DO_EFS:/    /mnt/nfs         nfs    defaults          0   0 " >> /etc/fstab
     sudo mount -a
     sudo yum install docker -y
     sudo systemctl start docker
